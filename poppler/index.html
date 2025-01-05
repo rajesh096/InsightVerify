@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Upload PDF or Image</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" class="form-control-file" id="fileInput" accept="application/pdf, image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="uploadButton">Upload</button>
+        </form>
+        <div id="result" class="result" style="display: none;"></div>
+        <button id="copyButton" class="btn btn-secondary mt-2" style="display: none;">Copy to Clipboard</button>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const uploadButton = document.getElementById('uploadButton');
+            uploadButton.disabled = true;
+            uploadButton.textContent = 'Uploading... Please wait';
+
+            setTimeout(() => {
+                fetch('http://localhost:8000/validate', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    setTimeout(() => {
+                        const resultDiv = document.getElementById('result');
+                        resultDiv.style.display = 'block';
+                        resultDiv.textContent = 'Success: ' + JSON.stringify(data, null, 2);
+                        uploadButton.disabled = false;
+                        uploadButton.textContent = 'Upload';
+                        document.getElementById('copyButton').style.display = 'block';
+                    }, Math.floor(Math.random() * 6000) + 10000); // Wait 10-15 seconds
+                })
+                .catch(error => {
+                    setTimeout(() => {
+                        const resultDiv = document.getElementById('result');
+                        resultDiv.style.display = 'block';
+                        resultDiv.textContent = 'Error: ' + error;
+                        uploadButton.disabled = false;
+                        uploadButton.textContent = 'Upload';
+                    }, Math.floor(Math.random() * 6000) + 10000); // Wait 10-15 seconds
+                });
+            }, Math.floor(Math.random() * 6000) + 10000); // Wait 10-15 seconds
+        });
+
+        document.getElementById('copyButton').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            const textArea = document.createElement('textarea');
+            textArea.value = resultDiv.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Result copied to clipboard');
+        });
+    </script>
+</body>
+</html>
